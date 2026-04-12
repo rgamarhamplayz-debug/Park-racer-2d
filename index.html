@@ -6,7 +6,9 @@
     <title>Park Racer: Ascension</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Changa+One&display=swap');
-        body { margin: 0; background: #050a05; font-family: 'Changa One', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: none; color: #fff; }
+        
+        /* Background set to #111 to match the game road and hide the letterboxing */
+        body { margin: 0; background: #111; font-family: 'Changa One', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: none; color: #fff; }
         
         #scaler { 
             display: flex; 
@@ -31,7 +33,6 @@
         .btn-main { padding: 15px; background: #0ff; color: #000; font-size: 20px; width: 100%; margin-top: 15px; box-shadow: 0 0 15px #0ff; }
         .btn-up { padding: 5px 12px; background: #ffd700; color: #000; font-size: 12px; }
         
-        /* TOUCH-ACTION: NONE is critical for mobile buttons */
         #ui-layer { width: 360px; display: flex; justify-content: space-between; margin-top: 15px; gap: 10px; height: 70px; touch-action: none; }
         .control-btn { flex: 1; background: rgba(0,255,255,0.1); color: #0ff; border: 2px solid #0ff; border-radius: 12px; font-size: 30px; display: flex; justify-content: center; align-items: center; user-select: none; pointer-events: auto; }
     </style>
@@ -68,20 +69,17 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 canvas.width = 360; canvas.height = 500;
 
+// THE NEW SCALING JAVASCRIPT
 function handleResize() {
     const scaler = document.getElementById('scaler');
-    const scaleX = window.innerWidth / 380; 
-    const scaleY = window.innerHeight / 660; 
+    const scaleX = window.innerWidth / 360; 
+    const scaleY = window.innerHeight / 600; 
     const finalScale = Math.min(scaleX, scaleY);
     scaler.style.transform = `scale(${finalScale})`;
 }
 
-// Fixed orientation listener for mobile tilt
 window.addEventListener('resize', handleResize);
-window.addEventListener('orientationchange', () => {
-    // We use a longer timeout to make sure the mobile browser finishes its animation
-    setTimeout(handleResize, 300);
-});
+window.addEventListener('orientationchange', () => setTimeout(handleResize, 300));
 handleResize();
 
 let save = JSON.parse(localStorage.getItem('parkRacerV4')) || { coins: 0, up: { speed: 1, handling: 1, jump: 1 } };
@@ -116,14 +114,12 @@ function die() {
 const input = (dir) => { if(active) lane = Math.max(0, Math.min(5, lane + dir)); };
 const jump = () => { if(active && !isJ) { isJ = true; jT = 30 + (save.up.jump * 5); } };
 
-// Key Support for GamePix Desktop Review
 window.addEventListener('keydown', (e) => {
     if(e.key === "ArrowLeft") input(-1);
     if(e.key === "ArrowRight") input(1);
     if(e.key === " " || e.key === "ArrowUp") jump();
 });
 
-// IMPROVED: Fixed Mobile Touch Listeners for Tilt
 const bindTouch = (id, fn) => {
     const el = document.getElementById(id);
     el.addEventListener('pointerdown', (e) => {
