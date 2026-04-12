@@ -1,70 +1,84 @@
-<!<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Park Racer: Ascension</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Changa+One&display=swap');
-        body { margin: 0; background: #050a05; font-family: 'Changa One', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: none; color: #fff; transition: background 2s; }
-        #game-container { position: relative; width: 360px; height: 540px; max-width: 95vw; max-height: 70vh; }
+        body { margin: 0; background: #050a05; font-family: 'Changa One', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: none; color: #fff; }
+        
+        /* FIX: Scaling Container for Iframe Compatibility */
+        #scaler { display: flex; flex-direction: column; align-items: center; justify-content: center; transform-origin: center; }
+        
+        #game-container { position: relative; width: 360px; height: 520px; }
         canvas { background: #111; border: 3px solid #0ff; border-radius: 8px; width: 100%; height: 100%; display: block; box-shadow: 0 0 20px rgba(0,255,255,0.2); }
-        #hud { position: absolute; top: -35px; width: 100%; display: flex; justify-content: space-between; font-size: 18px; color: #0ff; }
+        
+        #hud { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 18px; color: #0ff; pointer-events: none; z-index: 10; text-shadow: 2px 2px #000; }
         #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; border-radius: 8px; }
-        .garage { background: #111; padding: 20px; border: 2px solid #0ff; width: 85%; border-radius: 12px; }
+        
+        .garage { background: #111; padding: 20px; border: 2px solid #0ff; width: 80%; border-radius: 12px; text-align: center; }
         .upgrade-row { display: flex; justify-content: space-between; align-items: center; margin: 10px 0; font-size: 14px; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        
         button { border: none; font-family: 'Changa One', sans-serif; cursor: pointer; text-transform: uppercase; border-radius: 20px; }
         .btn-main { padding: 15px; background: #0ff; color: #000; font-size: 20px; width: 100%; margin-top: 15px; box-shadow: 0 0 15px #0ff; }
         .btn-up { padding: 5px 12px; background: #ffd700; color: #000; font-size: 12px; }
-        #ui-layer { width: 360px; max-width: 95vw; display: flex; justify-content: space-between; margin-top: 15px; gap: 10px; height: 80px; }
-        .control-btn { flex: 1; background: rgba(0,255,255,0.1); color: #0ff; border: 2px solid #0ff; border-radius: 12px; font-size: 30px; display: flex; justify-content: center; align-items: center; user-select: none; touch-action: none; }
-        .control-btn:active { background: #0ff; color: #000; }
-        .secret-unlock { color: #ff00ff; text-shadow: 0 0 10px #ff00ff; animation: pulse 1s infinite; display: none; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        #ui-layer { width: 360px; display: flex; justify-content: space-between; margin-top: 15px; gap: 10px; height: 70px; }
+        .control-btn { flex: 1; background: rgba(0,255,255,0.1); color: #0ff; border: 2px solid #0ff; border-radius: 12px; font-size: 30px; display: flex; justify-content: center; align-items: center; user-select: none; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="hud">
-            <span>SCORE: <span id="scoreText">0</span></span>
-            <span style="color:#ffd700">💰: <span id="coinText">0</span></span>
-        </div>
-
-        <div id="overlay">
-            <div class="garage">
-                <h2 style="color:#0ff; margin:0;">THE GARAGE</h2>
-                <div id="secretMsg" class="secret-unlock">COSMIC MODE ACTIVE</div>
-                <div class="upgrade-row"><span>ENGINE</span><button class="btn-up" onclick="buy('speed')">Cost: <span id="c-speed">50</span></button></div>
-                <div class="upgrade-row"><span>STEER</span><button class="btn-up" onclick="buy('handling')">Cost: <span id="c-handling">50</span></button></div>
-                <div class="upgrade-row"><span>JUMP</span><button class="btn-up" onclick="buy('jump')">Cost: <span id="c-jump">50</span></button></div>
-                <button class="btn-main" onclick="start()">DRIVE</button>
+    <div id="scaler">
+        <div id="game-container">
+            <div id="hud">
+                <span>SCORE: <span id="scoreText">0</span></span>
+                <span style="color:#ffd700">GOLD: <span id="coinText">0</span></span>
             </div>
+            <div id="overlay">
+                <div class="garage">
+                    <h2 style="color:#0ff; margin:0 0 10px 0;">THE GARAGE</h2>
+                    <div class="upgrade-row"><span>ENGINE</span><button class="btn-up" onclick="buy('speed')">Cost: <span id="c-speed">50</span></button></div>
+                    <div class="upgrade-row"><span>STEER</span><button class="btn-up" onclick="buy('handling')">Cost: <span id="c-handling">50</span></button></div>
+                    <div class="upgrade-row"><span>JUMP</span><button class="btn-up" onclick="buy('jump')">Cost: <span id="c-jump">50</span></button></div>
+                    <button class="btn-main" onclick="start()">DRIVE</button>
+                </div>
+            </div>
+            <canvas id="game"></canvas>
         </div>
-        <canvas id="game"></canvas>
-    </div>
 
-    <div id="ui-layer">
-        <div id="left-btn" class="control-btn">←</div>
-        <div id="jump-btn" class="control-btn">🚀</div>
-        <div id="right-btn" class="control-btn">→</div>
+        <div id="ui-layer">
+            <div id="left-btn" class="control-btn">←</div>
+            <div id="jump-btn" class="control-btn">🚀</div>
+            <div id="right-btn" class="control-btn">→</div>
+        </div>
     </div>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-canvas.width = 360; canvas.height = 540;
+canvas.width = 360; canvas.height = 520;
 
-let save = JSON.parse(localStorage.getItem('parkRacerV4')) || { coins: 0, up: { speed: 1, handling: 1, jump: 1 }, secret: false };
+// FIX: Auto-Resize for 800x450 iframe
+function handleResize() {
+    const scaler = document.getElementById('scaler');
+    const scale = Math.min(window.innerWidth / 380, window.innerHeight / 620);
+    scaler.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', handleResize);
+handleResize();
+
+let save = JSON.parse(localStorage.getItem('parkRacerV4')) || { coins: 0, up: { speed: 1, handling: 1, jump: 1 } };
 const saveGame = () => { localStorage.setItem('parkRacerV4', JSON.stringify(save)); updateUI(); };
 
-let score = 0, speed = 0, lane = 2, px = 180, active = false, isJ = false, jT = 0, difficulty = 1;
-let enemies = [], trees = [], coins = [], particles = [];
+let score = 0, baseSpd = 0, lane = 2, px = 180, active = false, isJ = false, jT = 0;
+let enemies = [], trees = [], coins = [];
 const lanes = [35, 93, 151, 209, 267, 325];
 
 function updateUI() {
     document.getElementById('coinText').innerText = save.coins;
     ['speed', 'handling', 'jump'].forEach(id => document.getElementById('c-'+id).innerText = save.up[id] * 50);
-    if(save.secret) document.getElementById('secretMsg').style.display = 'block';
 }
 
 function buy(t) {
@@ -73,116 +87,82 @@ function buy(t) {
 }
 
 function start() {
-    active = true; score = 0; enemies = []; trees = []; coins = []; particles = []; lane = 2; px = 180; difficulty = 1;
-    speed = 5 + (save.up.speed * 0.5);
+    active = true; score = 0; enemies = []; trees = []; coins = []; lane = 2; px = 180;
+    baseSpd = 3.8 + (save.up.speed * 0.3); // Balanced starting speed
     document.getElementById('overlay').style.display = 'none';
 }
 
 function die() {
     active = false;
-    if(score >= 10000 && !save.secret) { save.secret = true; alert("SECRET UNLOCKED: COSMIC DRIFT MODE!"); }
-    let b = Math.floor(score / 100); save.coins += b; saveGame();
+    save.coins += Math.floor(score / 100); saveGame();
     document.getElementById('overlay').style.display = 'flex';
 }
 
 const input = (dir) => { if(active) lane = Math.max(0, Math.min(5, lane + dir)); };
 const jump = () => { if(active && !isJ) { isJ = true; jT = 30 + (save.up.jump * 5); } };
 
-const setupBtn = (id, fn) => {
+// FIX: Desktop Playability (Keyboard Support)
+window.addEventListener('keydown', (e) => {
+    if(e.key === "ArrowLeft") input(-1);
+    if(e.key === "ArrowRight") input(1);
+    if(e.key === " " || e.key === "ArrowUp") jump();
+});
+
+// Mobile Touch Controls
+const bind = (id, fn) => {
     const el = document.getElementById(id);
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); fn(); });
+    el.onpointerdown = (e) => { e.preventDefault(); fn(); };
 };
-setupBtn('left-btn', () => input(-1)); setupBtn('right-btn', () => input(1)); setupBtn('jump-btn', () => jump());
+bind('left-btn', () => input(-1)); bind('right-btn', () => input(1)); bind('jump-btn', () => jump());
 
 function drawCar(x, y, color, isP) {
-    ctx.save();
-    ctx.translate(x, y);
-    if(isJ && isP) { ctx.scale(1.3, 1.3); ctx.shadowBlur = 20; ctx.shadowColor = color; }
-    // Secret Visual: Rainbow glow if secret unlocked
-    if(save.secret && isP) { ctx.shadowBlur = 25; ctx.shadowColor = `hsl(${Date.now()/10 % 360}, 100%, 50%)`; }
+    ctx.save(); ctx.translate(x, y);
+    if(isJ && isP) { ctx.scale(1.2, 1.2); ctx.shadowBlur = 15; ctx.shadowColor = "#fff"; }
     ctx.fillStyle = color;
-    ctx.beginPath(); ctx.roundRect(-15, -30, 30, 60, 5); ctx.fill();
-    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(-12, -15, 24, 20);
+    ctx.beginPath(); ctx.roundRect(-15, -25, 30, 50, 5); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.fillRect(-12, -12, 24, 15);
     ctx.restore();
 }
 
 function update() {
     if(!active) return;
     score++; document.getElementById('scoreText').innerText = score;
-    
-    // DIFFICULTY SCALING: Increase speed and spawn rates every 1000 pts
-    difficulty = 1 + (score / 2000);
-    let currentSpeed = speed * (1 + (score / 10000));
-
-    let step = 0.15 + (save.up.handling * 0.05);
-    px += (lanes[lane] - px) * step;
+    let currentSpeed = baseSpd + (score / 5000); // Gradual speed increase
+    px += (lanes[lane] - px) * (0.15 + (save.up.handling * 0.05));
     if(isJ) { jT--; if(jT <= 0) isJ = false; }
 
-    // SECRET AT 10K: Background and Particle logic
-    if(score > 10000) {
-        if(Math.random() < 0.3) particles.push({x: Math.random()*360, y: 0, s: Math.random()*3});
-    }
-
-    // Spawn Logic scaled by difficulty
-    if(Math.random() < 0.03 * difficulty) enemies.push({l: Math.floor(Math.random()*6), y: -100, c: `hsl(${Math.random()*360}, 60%, 50%)`});
-    if(Math.random() < 0.02) coins.push({l: Math.floor(Math.random()*6), y: -50});
-    if(Math.random() < 0.05) trees.push({x: Math.random()<0.5?10:350, y:-50});
+    if(Math.random() < 0.025) enemies.push({l: Math.floor(Math.random()*6), y: -100, c: `hsl(${Math.random()*360}, 60%, 50%)`});
+    if(Math.random() < 0.015) coins.push({l: Math.floor(Math.random()*6), y: -50});
+    if(Math.random() < 0.04) trees.push({x: Math.random()<0.5?10:350, y:-50});
 
     enemies.forEach((e, i) => {
         e.y += currentSpeed;
-        if(!isJ && Math.abs(px - lanes[e.l]) < 28 && Math.abs(450 - e.y) < 50) die();
+        if(!isJ && Math.abs(px - lanes[e.l]) < 28 && Math.abs(440 - e.y) < 45) die();
         if(e.y > 600) enemies.splice(i, 1);
     });
     coins.forEach((c, i) => {
         c.y += currentSpeed;
-        if(Math.abs(px - lanes[c.l]) < 30 && Math.abs(450 - c.y) < 40) { save.coins += 5; saveGame(); coins.splice(i, 1); }
+        if(Math.abs(px - lanes[c.l]) < 30 && Math.abs(440 - c.y) < 40) { save.coins += 5; saveGame(); coins.splice(i, 1); }
         if(c.y > 600) coins.splice(i, 1);
     });
     trees.forEach((t, i) => { t.y += currentSpeed; if(t.y > 600) trees.splice(i, 1); });
-    particles.forEach((p, i) => { p.y += 10; if(p.y > 600) particles.splice(i, 1); });
 }
 
 function draw() {
-    ctx.clearRect(0,0,360,540);
+    ctx.fillStyle = "#1a2a1a"; ctx.fillRect(0,0,360,520);
+    ctx.fillStyle = "#222"; ctx.fillRect(20,0,320,520);
+    ctx.setLineDash([15, 15]); ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.beginPath(); for(let i=1; i<6; i++) { ctx.moveTo(20+(320/6)*i, 0); ctx.lineTo(20+(320/6)*i, 520); } ctx.stroke();
     
-    // SECRET VISUAL: If score > 10000, change colors to Cosmic
-    if(score < 10000) {
-        ctx.fillStyle = "#1a2a1a"; // Grass
-        ctx.fillRect(0,0,360,540);
-        ctx.fillStyle = "#222"; // Road
-    } else {
-        ctx.fillStyle = "#00001a"; // Space
-        ctx.fillRect(0,0,360,540);
-        ctx.fillStyle = "#050525"; // Dark Space Road
-        // Draw Stars
-        ctx.fillStyle = "#fff";
-        particles.forEach(p => ctx.fillRect(p.x, p.y, p.s, p.s));
-    }
-    ctx.fillRect(20,0,320,540);
-
-    ctx.strokeStyle = score > 10000 ? "rgba(255,0,255,0.3)" : "rgba(0,255,255,0.1)"; 
-    ctx.setLineDash([20, 20]);
-    ctx.lineDashOffset = -score * (speed/2);
-    ctx.beginPath();
-    for(let i=1; i<6; i++) { let lx = 20 + (320/6) * i; ctx.moveTo(lx, 0); ctx.lineTo(lx, 540); }
-    ctx.stroke();
-
-    trees.forEach(t => { 
-        ctx.fillStyle = score > 10000 ? "#220044" : "#0a1a0a"; 
-        ctx.beginPath(); ctx.arc(t.x, t.y, 15, 0, Math.PI*2); ctx.fill(); 
-    });
+    trees.forEach(t => { ctx.fillStyle = "#0a1a0a"; ctx.beginPath(); ctx.arc(t.x, t.y, 12, 0, Math.PI*2); ctx.fill(); });
     coins.forEach(c => { ctx.fillStyle = "#ffd700"; ctx.beginPath(); ctx.arc(lanes[c.l], c.y, 8, 0, Math.PI*2); ctx.fill(); });
     enemies.forEach(e => drawCar(lanes[e.l], e.y, e.c, false));
-    
-    // Player car
-    let pCol = score > 10000 ? `hsl(${Date.now()/5 % 360}, 100%, 70%)` : "#0ff";
-    drawCar(px, 450, pCol, true);
-
-    requestAnimationFrame(() => { update(); draw(); });
+    drawCar(px, 440, "#0ff", true);
+    update();
+    requestAnimationFrame(draw);
 }
-
-updateUI();
-draw();
+updateUI(); draw();
 </script>
 </body>
 </html>
+
