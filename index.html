@@ -6,12 +6,20 @@
     <title>Park Racer: Ascension</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Changa+One&display=swap');
-        body { margin: 0; background: #050a05; font-family: 'Changa One', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: none; color: #fff; }
+        body { margin: 0; background: #050a05; font-family: 'Changa One', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: none; color: #fff; }
         
-        /* FIX: Scaling Container for Iframe Compatibility */
-        #scaler { display: flex; flex-direction: column; align-items: center; justify-content: center; transform-origin: center; }
+        /* THE FIX: Scaler that shrinks the game to fit height or width */
+        #scaler { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transform-origin: center center;
+            width: 100vw;
+            height: 100vh;
+        }
         
-        #game-container { position: relative; width: 360px; height: 520px; }
+        #game-container { position: relative; width: 360px; height: 500px; }
         canvas { background: #111; border: 3px solid #0ff; border-radius: 8px; width: 100%; height: 100%; display: block; box-shadow: 0 0 20px rgba(0,255,255,0.2); }
         
         #hud { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 18px; color: #0ff; pointer-events: none; z-index: 10; text-shadow: 2px 2px #000; }
@@ -58,15 +66,18 @@
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-canvas.width = 360; canvas.height = 520;
+canvas.width = 360; canvas.height = 500;
 
-// FIX: Auto-Resize for 800x450 iframe
+// FIX: Auto-Resize for Mobile Landscape & GamePix Iframe
 function handleResize() {
     const scaler = document.getElementById('scaler');
-    const scale = Math.min(window.innerWidth / 380, window.innerHeight / 620);
-    scaler.style.transform = `scale(${scale})`;
+    const scaleX = window.innerWidth / 380; 
+    const scaleY = window.innerHeight / 650; // Checks height to prevent button cutting
+    const finalScale = Math.min(scaleX, scaleY);
+    scaler.style.transform = `scale(${finalScale})`;
 }
 window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', () => setTimeout(handleResize, 100));
 handleResize();
 
 let save = JSON.parse(localStorage.getItem('parkRacerV4')) || { coins: 0, up: { speed: 1, handling: 1, jump: 1 } };
@@ -88,7 +99,7 @@ function buy(t) {
 
 function start() {
     active = true; score = 0; enemies = []; trees = []; coins = []; lane = 2; px = 180;
-    baseSpd = 3.8 + (save.up.speed * 0.3); // Balanced starting speed
+    baseSpd = 4.0 + (save.up.speed * 0.4);
     document.getElementById('overlay').style.display = 'none';
 }
 
@@ -101,14 +112,13 @@ function die() {
 const input = (dir) => { if(active) lane = Math.max(0, Math.min(5, lane + dir)); };
 const jump = () => { if(active && !isJ) { isJ = true; jT = 30 + (save.up.jump * 5); } };
 
-// FIX: Desktop Playability (Keyboard Support)
+// FIX: Keyboard Support for Desktop
 window.addEventListener('keydown', (e) => {
     if(e.key === "ArrowLeft") input(-1);
     if(e.key === "ArrowRight") input(1);
     if(e.key === " " || e.key === "ArrowUp") jump();
 });
 
-// Mobile Touch Controls
 const bind = (id, fn) => {
     const el = document.getElementById(id);
     el.onpointerdown = (e) => { e.preventDefault(); fn(); };
@@ -127,7 +137,7 @@ function drawCar(x, y, color, isP) {
 function update() {
     if(!active) return;
     score++; document.getElementById('scoreText').innerText = score;
-    let currentSpeed = baseSpd + (score / 5000); // Gradual speed increase
+    let currentSpeed = baseSpd + (score / 4500);
     px += (lanes[lane] - px) * (0.15 + (save.up.handling * 0.05));
     if(isJ) { jT--; if(jT <= 0) isJ = false; }
 
@@ -137,27 +147,28 @@ function update() {
 
     enemies.forEach((e, i) => {
         e.y += currentSpeed;
-        if(!isJ && Math.abs(px - lanes[e.l]) < 28 && Math.abs(440 - e.y) < 45) die();
+        if(!isJ && Math.abs(px - lanes[e.l]) < 28 && Math.abs(430 - e.y) < 45) die();
         if(e.y > 600) enemies.splice(i, 1);
     });
     coins.forEach((c, i) => {
         c.y += currentSpeed;
-        if(Math.abs(px - lanes[c.l]) < 30 && Math.abs(440 - c.y) < 40) { save.coins += 5; saveGame(); coins.splice(i, 1); }
+        if(Math.abs(px - lanes[c.l]) < 30 && Math.abs(430 - c.y) < 40) { save.coins += 5; saveGame(); coins.splice(i, 1); }
         if(c.y > 600) coins.splice(i, 1);
     });
     trees.forEach((t, i) => { t.y += currentSpeed; if(t.y > 600) trees.splice(i, 1); });
 }
 
 function draw() {
-    ctx.fillStyle = "#1a2a1a"; ctx.fillRect(0,0,360,520);
-    ctx.fillStyle = "#222"; ctx.fillRect(20,0,320,520);
+    ctx.fillStyle = "#1a2a1a"; ctx.fillRect(0,0,360,500);
+    ctx.fillStyle = "#222"; ctx.fillRect(20,0,320,500);
     ctx.setLineDash([15, 15]); ctx.strokeStyle = "rgba(255,255,255,0.1)";
-    ctx.beginPath(); for(let i=1; i<6; i++) { ctx.moveTo(20+(320/6)*i, 0); ctx.lineTo(20+(320/6)*i, 520); } ctx.stroke();
+    ctx.beginPath(); for(let i=1; i<6; i++) { ctx.moveTo(20+(320/6)*i, 0); ctx.lineTo(20+(320/6)*i, 500); } ctx.stroke();
     
     trees.forEach(t => { ctx.fillStyle = "#0a1a0a"; ctx.beginPath(); ctx.arc(t.x, t.y, 12, 0, Math.PI*2); ctx.fill(); });
     coins.forEach(c => { ctx.fillStyle = "#ffd700"; ctx.beginPath(); ctx.arc(lanes[c.l], c.y, 8, 0, Math.PI*2); ctx.fill(); });
     enemies.forEach(e => drawCar(lanes[e.l], e.y, e.c, false));
-    drawCar(px, 440, "#0ff", true);
+    drawCar(px, 430, "#0ff", true);
+
     update();
     requestAnimationFrame(draw);
 }
@@ -165,4 +176,3 @@ updateUI(); draw();
 </script>
 </body>
 </html>
-
